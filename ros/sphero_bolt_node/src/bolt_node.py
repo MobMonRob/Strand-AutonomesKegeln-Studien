@@ -22,11 +22,11 @@ def callbackStopRoll(data, bolt):
 
 def callbackHeading(data, bolt):
     rospy.loginfo(f'heading message. {data}')
-    bolt.set_heading(data)
+    bolt.set_heading(data.data)
 
 def callbackSpeed(data, bolt):
     rospy.loginfo(f'speed message. {data}')
-    bolt.set_speed(data)
+    bolt.set_speed(data.data)
 
 
 def listener(bolt):
