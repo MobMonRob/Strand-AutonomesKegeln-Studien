@@ -7,11 +7,27 @@ from spherov2 import scanner
 from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
 from sphero_bolt_node.msg import Roll
+from std_msgs.msg import  Int16
+#import ros standard message int 
 
 
-def callback(data, bolt):
-    rospy.loginfo(f'received message: {data}')
+def callbackRoll(data, bolt):
+    rospy.loginfo(f'rolling message: {data}')
     bolt.roll(data.heading, data.speed, data.duration)
+
+def callbackStopRoll(data, bolt):
+    rospy.loginfo(f'stop')
+    bolt.stop()
+
+
+def callbackHeading(data, bolt):
+    rospy.loginfo(f'heading message. {data}')
+    bolt.heading(data)
+
+def callbackSpeed(data, bolt):
+    rospy.loginfo(f'speed message. {data}')
+    bolt.speed(data)
+
 
 def listener(bolt):
 
@@ -22,8 +38,10 @@ def listener(bolt):
 # run simultaneously.
     rospy.init_node('sphero', anonymous=True)
     rospy.loginfo('listener node is up')
-
-    rospy.Subscriber('sphero_control', Roll, callback, bolt)
+    rospy.Subscriber('sphero_control/roll', Roll, callbackRoll, bolt)
+    rospy.Subscriber('sphero_control/heading', Int16, callbackHeading, bolt)
+    rospy.Subscriber('sphero_control/speed', Int16, callbackSpeed, bolt)
+    rospy.Subscriber('sphero_control/stopRoll', None, callbackStopRoll, bolt)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
@@ -34,7 +52,10 @@ def initialize_bolt(bolt):
 
 def main():
     print("Connecting to Bolt...")
+    listener(42)
+
     toy = scanner.find_BOLT()
+    toy = 5
 
     if toy is not None:
         print("connected")
