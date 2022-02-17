@@ -7,7 +7,7 @@ from spherov2 import scanner
 from spherov2.sphero_edu import SpheroEduAPI
 from spherov2.types import Color
 from sphero_bolt_node.msg import Roll
-from std_msgs.msg import  Int16
+from std_msgs.msg import  Int16, Empty
 #import ros standard message int 
 
 
@@ -41,7 +41,7 @@ def listener(bolt):
     rospy.Subscriber('sphero_control/roll', Roll, callbackRoll, bolt)
     rospy.Subscriber('sphero_control/heading', Int16, callbackHeading, bolt)
     rospy.Subscriber('sphero_control/speed', Int16, callbackSpeed, bolt)
-    rospy.Subscriber('sphero_control/stopRoll', None, callbackStopRoll, bolt)
+    rospy.Subscriber('sphero_control/stopRoll', Empty, callbackStopRoll, bolt)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
@@ -52,15 +52,13 @@ def initialize_bolt(bolt):
 
 def main():
     rospy.loginfo("Connecting to Bolt...")
-    listener(42)
 
     toy = scanner.find_BOLT()
-    toy = 5
 
     if toy is not None:
         print("connected")
         with SpheroEduAPI(toy) as bolt:
-            bolt = SpheroEduAPI(toy)
+            #bolt = SpheroEduAPI(toy)
             initialize_bolt(bolt)
             listener(bolt)
         
