@@ -17,16 +17,16 @@ def callbackRoll(data, bolt):
 
 def callbackStopRoll(data, bolt):
     rospy.loginfo(f'stop')
-    bolt.stop()
+    bolt.stop_roll()
 
 
 def callbackHeading(data, bolt):
     rospy.loginfo(f'heading message. {data}')
-    bolt.heading(data)
+    bolt.set_heading(data)
 
 def callbackSpeed(data, bolt):
     rospy.loginfo(f'speed message. {data}')
-    bolt.speed(data)
+    bolt.set_speed(data)
 
 
 def listener(bolt):
@@ -54,6 +54,7 @@ def main():
     rospy.loginfo("Connecting to Bolt...")
 
     toy = scanner.find_BOLT()
+
 
     if toy is not None:
         print("connected")
