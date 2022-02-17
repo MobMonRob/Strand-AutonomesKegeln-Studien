@@ -51,7 +51,7 @@ def initialize_bolt(bolt):
     bolt.reset_aim()
 
 def main():
-    print("Connecting to Bolt...")
+    rospy.loginfo("Connecting to Bolt...")
     listener(42)
 
     toy = scanner.find_BOLT()
