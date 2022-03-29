@@ -8,10 +8,14 @@ project(sphero_bolt_node)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  pcl_conversions
+  pcl_ros
   roscpp
   rospy
   std_msgs
   message_generation
+  sensor_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -105,7 +109,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES sphero_bolt_node
-  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS roscpp rospy std_msgs 
   #DEPENDS system_lib
   CATKIN_DEPENDS message_runtime
 )
@@ -134,7 +138,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/sphero_bolt_node_node.cpp)
+add_executable(processing src/processing.cpp)
+target_link_libraries(processing ${catkin_LIBRARIES})
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -206,6 +211,6 @@ include_directories(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
-catkin_install_python(PROGRAMS src/bolt_node.py
+catkin_install_python(PROGRAMS src/move_sphero.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
