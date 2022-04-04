@@ -8,7 +8,28 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
+#include <pcl/common/distances.h>
 #include <iostream>
+#include <vector>
+#include <stdlib.h>
+
+const float FIELDSIZE_X = 1.35f;
+const float FIELDSIZE_Y = 3.0f;
+const float EPSILON_POINT_DISTANCE = 0.035f;
+
+struct Cluster {
+  std::vector<pcl::PointXYZ> points;  
+};
+
+bool pointIsInField(const pcl::PointXYZ& point) {
+  const float yOffset = FIELDSIZE_Y / 2.0f;
+  if (yOffset < abs(point.y))
+    return false;
+  if (FIELDSIZE_X < abs(point.x))
+    return false;
+
+  return true;
+}
 
 
 void 
@@ -20,9 +41,41 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);
 
-  for (int i = 0; i < temp_cloud->points.size(); i++) {
+  std::vector<Cluster> clusters;
+  auto currentCluster = Cluster();
+  
 
-    std::cout << "x:\t" << temp_cloud->points[i].x << "\ty:\t" << temp_cloud->points[i].y << "\tz:\t" << temp_cloud->points[i].z << "\n";
+  //build clusters
+  for(auto& point: temp_cloud->points) {
+    if (point.x == 0 && point.y == 0 && point.z == 0) {
+      continue;
+    }
+    if (!pointIsInField(point))
+      continue;
+
+    float distanceToLastPoint = 0;
+    if (currentCluster.points.size() > 0)
+      distanceToLastPoint =  pcl::euclideanDistance(point, currentCluster.points.back());
+
+    if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
+      //filter out clusters which consist of only one point
+      if (currentCluster.points.size() > 1)
+        clusters.push_back(currentCluster);
+      currentCluster = Cluster();
+    }
+    currentCluster.points.push_back(pcl::PointXYZ(point));
+  }
+  if (currentCluster.points.size() > 1)
+    clusters.push_back(currentCluster);
+
+
+  std::cout << "clusters: " << clusters.size() << " " << std::endl;
+  for(const auto& cluster: clusters) {
+    std::cout << "points in cluster:\t" << cluster.points.size()
+     << "first point:\t" << "x:\t" << cluster.points.front().x 
+     << "\ty:\t" << cluster.points.front().y 
+     << "\tz:\t" << cluster.points.front().z << std::endl;
+    std::cout << "----------------------------------" << std::endl;
   }
 }
 
