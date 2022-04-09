@@ -141,6 +141,9 @@ include_directories(
 add_executable(object_tracking src/object_tracking.cpp)
 target_link_libraries(object_tracking ${catkin_LIBRARIES})
 
+
+add_executable(control src/control.cpp)
+target_link_libraries(control ${catkin_LIBRARIES})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use
