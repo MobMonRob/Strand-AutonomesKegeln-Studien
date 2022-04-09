@@ -21,6 +21,21 @@ struct Cluster {
   std::vector<pcl::PointXYZ> points;  
 };
 
+const pcl::PointXYZ getBallLocation(const Cluster& ballCluster) {
+  float x = 0.0f;
+  float y = 0.0f;
+  float z = 0.0f;
+  for (auto& point: ballCluster.points) {
+    x += point.x;
+    y += point.y;
+  }
+  x = x / ballCluster.points.size();
+  y = y / ballCluster.points.size();
+  z = z / ballCluster.points.size();
+  
+  return pcl::PointXYZ(x, y, z);
+}
+
 bool pointIsInField(const pcl::PointXYZ& point) {
   const float yOffset = FIELDSIZE_Y / 2.0f;
   if (yOffset < abs(point.y))
@@ -71,6 +86,8 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 
   std::cout << "clusters: " << clusters.size() << " " << std::endl;
   for(const auto& cluster: clusters) {
+    auto ballPosition = getBallLocation(cluster);
+    std::cout << "ball position x:\t" << ballPosition.x << "\ty:\t" << ballPosition.y << "\tz:\t" << ballPosition.z << std::endl;
     std::cout << "points in cluster:\t" << cluster.points.size()
      << "first point:\t" << "x:\t" << cluster.points.front().x 
      << "\ty:\t" << cluster.points.front().y 
