@@ -57,6 +57,9 @@ class TargetAngleControl {
         std::cout << "x:\t" << input.x << "y:\t" << input.y << "z:\t" << input.z << std::endl;
         std::cout << "target angle: " << idealAngle() << std::endl;
         std::cout << "------------------------------------" << std::endl;
+        std_msgs::Int16 output;
+        output.data = (int16_t) idealAngle();
+        pub.publish(output);
     }
 
     private:
