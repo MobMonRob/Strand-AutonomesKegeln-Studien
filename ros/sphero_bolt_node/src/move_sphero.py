@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import queue
 import rospy
 import time
 
@@ -68,10 +69,10 @@ class SpheroControl:
         self.heading = 0
         self.speed = 0
 
-        rospy.Subscriber('sphero_control/roll', Roll, self.callbackRoll, bolt,1, 1)
-        rospy.Subscriber('sphero_control/heading', Int16, self.callbackHeading, 1, 1)
-        rospy.Subscriber('sphero_control/speed', Int16, self.callbackSpeed, 1, 1)
-        rospy.Subscriber('sphero_control/stopRoll', Empty, self.callbackStopRoll, 1, 1)
+        rospy.Subscriber('sphero_control/roll', Roll, self.callbackRoll, bolt, queue_size=1, buff_size=1)
+        rospy.Subscriber('sphero_control/heading', Int16, self.callbackHeading, queue_size=1, buff_size=1)
+        rospy.Subscriber('sphero_control/speed', Int16, self.callbackSpeed, queue_size=1, buff_size=1)
+        rospy.Subscriber('sphero_control/stopRoll', Empty, self.callbackStopRoll, queue_size=1, buff_size=1)
 
 
     def callbackRoll(self, data):
