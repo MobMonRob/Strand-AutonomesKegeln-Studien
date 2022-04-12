@@ -13,6 +13,9 @@
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
+#include <cmath>
+#include <utility>
+#include <stdexcept>
 
 
 struct Cluster {
@@ -20,6 +23,22 @@ struct Cluster {
 };
 
 class PositionDetection {
+  private:
+  const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
+  const float spheroRadius = 0.0365f; //36.5mm
+  const float sensorAngleResolution = 0.16f;
+  const float heightOpticalAxis = 0.063; //63mm
+  const float spheroDiameterAtOpticalAxis = 2*sqrtf(powf(spheroRadius, 2.0)-powf(spheroRadius - heightOpticalAxis, 2.0)); //2*sqrt(r^2-(r-h)^2)
+  const int clusterPointTolerance = 4;
+
+  const float FIELDSIZE_X = 1.35f;
+  const float FIELDSIZE_Y = 3.0f;
+  const float EPSILON_POINT_DISTANCE = 0.035f;
+  ros::NodeHandle nh;
+  ros::Subscriber sub;
+  ros::Publisher pub;
+
+
   public:
   PositionDetection() {
     sub = nh.subscribe("cloud", 1, &PositionDetection::callback, this);
@@ -27,17 +46,17 @@ class PositionDetection {
   }
 
   private:
-  const pcl::PointXYZ getBallLocation(const Cluster& ballCluster) {
+  const pcl::PointXYZ getClusterLocation(const Cluster& cluster) {
     float x = 0.0f;
     float y = 0.0f;
     float z = 0.0f;
-    for (auto& point: ballCluster.points) {
+    for (auto& point: cluster.points) {
       x += point.x;
       y += point.y;
     }
-    x = x / ballCluster.points.size();
-    y = y / ballCluster.points.size();
-    z = z / ballCluster.points.size();
+    x = x / cluster.points.size();
+    y = y / cluster.points.size();
+    z = z / cluster.points.size();
     
     return pcl::PointXYZ(x, y, z);
   }
@@ -52,11 +71,33 @@ class PositionDetection {
     return true;
   }
 
+  float getClusterDistanceToOrigin(const Cluster& cluster) {
+    auto clusterLocation = getClusterLocation(cluster);
+    return sqrtf(powf(clusterLocation.x, 2.0) + powf(clusterLocation.y, 2.0));
+  }
+
+  float distanceBetweenMeassurementPoints(float sensorDistance) {
+    //a1 = distance * tan alpha1 -> a = 2*a1 = 2 * distance * tan alpha1
+    const float alpha1 = sensorAngleResolution / 2.0f;
+    //return 2*sensorDistance*tan(alpha1 *(M_PI/180.0f));
+    return sensorDistance * tan(sensorAngleResolution*(M_PI/180.0f));
+  }
+
+  int expectedBallPoints(float sensorDistance) {
+    return (int) (spheroDiameterAtOpticalAxis / distanceBetweenMeassurementPoints(sensorDistance));
+  }
+
   const Cluster& getBallCluster(const std::vector<Cluster>& clusters) {
-   for(const auto& cluster: clusters)
-	if (cluster.points.size() < 40)
-		return cluster;
-   return clusters[1];
+    for(const auto& cluster: clusters) {
+      const auto distance = getClusterDistanceToOrigin(cluster);
+      const auto expectedPoints = expectedBallPoints(distance);
+      std::cout << "distance: " << distance << "\texpected points: " << expectedPoints << "actual points: " << cluster.points.size() << std::endl;
+
+      if (expectedPoints - clusterPointTolerance  <= cluster.points.size() && cluster.points.size() <= expectedPoints + clusterPointTolerance ) {
+        return cluster;
+      }
+    }
+    throw std::invalid_argument("Ball not found");
   }
 
   void 
@@ -85,43 +126,37 @@ class PositionDetection {
         distanceToLastPoint =  pcl::euclideanDistance(point, currentCluster.points.back());
 
       if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
-        //filter out clusters which consist of only one point
-        if (currentCluster.points.size() > 4)
+        //filter out clusters which consist of less than four points
+        if (currentCluster.points.size() >= 4)
           clusters.push_back(currentCluster);
         currentCluster = Cluster();
       }
       currentCluster.points.push_back(pcl::PointXYZ(point));
     }
-    if (currentCluster.points.size() > 4)
+    if (currentCluster.points.size() >= 4)
       clusters.push_back(currentCluster);
 
-    
     std::cout << "clusters: " << clusters.size() << " " << std::endl;
-    for(const auto& cluster: clusters) {
-      std::cout << "points in cluster:\t" << cluster.points.size()
-      << "first point:\t" << "x:\t" << cluster.points.front().x 
-      << "\ty:\t" << cluster.points.front().y 
-      << "\tz:\t" << cluster.points.front().z << std::endl;
-      std::cout << "----------------------------------" << std::endl;
-    }
 
     //lol
-    auto ballLocation = getBallLocation(getBallCluster(clusters));
+
+    try {
+    auto ballCluster = getBallCluster(clusters);
+    auto ballLocation = getClusterLocation(ballCluster); 
+
+
+    std::cout << "found ballcluster with size: " << ballCluster.points.size() << "\nx:\t" << ballLocation.x  << 
+    "\ty:\t" << ballLocation.y << "\tz:\t" << ballLocation.z << std::endl;
+
     auto output = geometry_msgs::Point32();
     output.x = ballLocation.x;
     output.y = ballLocation.y;
     output.z = ballLocation.z;
     pub.publish(output);
+    } catch (const std::exception& err) {
+      std::cout << err.what() << std::endl;
+    }
   }
-
-  private:
-
-  const float FIELDSIZE_X = 1.35f;
-  const float FIELDSIZE_Y = 3.0f;
-  const float EPSILON_POINT_DISTANCE = 0.035f;
-  ros::NodeHandle nh;
-  ros::Subscriber sub;
-  ros::Publisher pub;
 };
 
 
