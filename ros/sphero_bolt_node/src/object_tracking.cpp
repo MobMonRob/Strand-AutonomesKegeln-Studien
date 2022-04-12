@@ -54,7 +54,7 @@ class PositionDetection {
 
   const Cluster& getBallCluster(const std::vector<Cluster>& clusters) {
    for(const auto& cluster: clusters)
-	if (cluster.points.size() < 60)
+	if (cluster.points.size() < 40)
 		return cluster;
    return clusters[1];
   }
@@ -86,13 +86,13 @@ class PositionDetection {
 
       if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
         //filter out clusters which consist of only one point
-        if (currentCluster.points.size() > 1)
+        if (currentCluster.points.size() > 4)
           clusters.push_back(currentCluster);
         currentCluster = Cluster();
       }
       currentCluster.points.push_back(pcl::PointXYZ(point));
     }
-    if (currentCluster.points.size() > 1)
+    if (currentCluster.points.size() > 4)
       clusters.push_back(currentCluster);
 
     
