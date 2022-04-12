@@ -10,6 +10,8 @@ from sphero_bolt_node.msg import Roll
 from std_msgs.msg import  Int16, Empty
 #import ros standard message int 
 
+heading = 0
+speed = 0
 
 def callbackRoll(data, bolt):
     rospy.loginfo(f'rolling message: {data}')
@@ -17,16 +19,27 @@ def callbackRoll(data, bolt):
 
 def callbackStopRoll(data, bolt):
     rospy.loginfo(f'stop')
+    speed = 0
     bolt.stop_roll()
 
 
 def callbackHeading(data, bolt):
     rospy.loginfo(f'heading message. {data}')
-    bolt.set_heading(data.data)
+    newHeading = data.data
+    if newHeading == heading:
+        return
+    else:
+        heading = newHeading
+        bolt.set_heading(newHeading)
 
 def callbackSpeed(data, bolt):
     rospy.loginfo(f'speed message. {data}')
-    bolt.set_speed(data.data)
+    newSpeed = data.data
+    if newSpeed == speed:
+        return
+    else:
+        speed = newSpeed
+        bolt.set_speed(newSpeed)
 
 
 def listener(bolt):
