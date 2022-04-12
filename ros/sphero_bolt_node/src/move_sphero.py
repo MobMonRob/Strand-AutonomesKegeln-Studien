@@ -114,7 +114,7 @@ def main():
         print("connected")
         with SpheroEduAPI(toy) as bolt:
             rospy.init_node('sphero', anonymous=True)
-            control = SpheroControl()
+            control = SpheroControl(bolt)
             rospy.loginfo('listener node is up')
             rospy.spin()
 
