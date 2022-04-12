@@ -53,7 +53,10 @@ class PositionDetection {
   }
 
   const Cluster& getBallCluster(const std::vector<Cluster>& clusters) {
-    return clusters[0];
+   for(const auto& cluster: clusters)
+	if (cluster.points.size() < 60)
+		return cluster;
+   return clusters[1];
   }
 
   void 

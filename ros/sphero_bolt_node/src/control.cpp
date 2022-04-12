@@ -23,8 +23,8 @@ class TargetAngleControl {
     public:
     TargetAngleControl() {
         //fix position for development
-        target.x = 0.2f;
-        target.y = -0.9f;
+        target.x = 0.628f;
+        target.y = -0.782f;
 
         sub = nh.subscribe("ball_position", 1, &TargetAngleControl::callback, this);
         pub = nh.advertise<std_msgs::Int16>("sphero_control/heading", 1);
@@ -46,7 +46,7 @@ class TargetAngleControl {
         if (ballIsAboveTarget()) {
             return 90.0f - angle;
         } else {
-            return 360.0f - angle;
+            return 360.0f - (90.0f - angle);
         }
     }
 
