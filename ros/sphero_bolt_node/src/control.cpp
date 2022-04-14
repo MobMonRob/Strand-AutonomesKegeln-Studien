@@ -47,7 +47,8 @@ class TargetAngleControl {
 
 	void updateHeading(int16_t newHeading) {
 		newHeading = std::min(newHeading, (int16_t)360);
-		if (newHeading == heading)
+			
+        if (heading - 1 <= newHeading && newHeading <= heading + 1) 
 			return;
 
         ROS_INFO_STREAM("publishing heading: " << newHeading);
@@ -58,6 +59,7 @@ class TargetAngleControl {
 	}
 
     void callbackNoBallDetected(std_msgs::Bool input) {
+		ROS_INFO("No ball detected");
         updateSpeed(0);
     }
 
