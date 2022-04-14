@@ -52,7 +52,7 @@ class TargetAngleControl {
         return ball_position.x >= target.x;
     }
 
-    float idealAngle() {
+    float getIdealAngle() {
         const float radiantToDegreeFactor = 180/M_PI; //deg/Rad = 360/2pi -> deg = pi*Rad/180
         float deltaX = fabs(ball_position.x - target.x);
         float deltaY = fabs(ball_position.y - target.y);
@@ -71,18 +71,30 @@ class TargetAngleControl {
 
     void callbackBallPosition(geometry_msgs::Point32 input) {
         ball_position = input;
+        int16_t idealAngle = (int16_t) getIdealAngle();
 
         std::cout << "x:\t" << input.x << "y:\t" << input.y << "z:\t" << input.z << std::endl;
-        std::cout << "target angle: " << idealAngle() << std::endl;
+        std::cout << "target angle: " << idealAngle << std::endl;
         std::cout << "------------------------------------" << std::endl;
         std_msgs::Int16 output;
-        output.data = (int16_t) idealAngle();
+
+
+
+        output.data = idealAngle;
         publisherHeading.publish(output);
-        updateSpeed(15);
+
+        if (idealAngle == lastAngle) {
+            updateSpeed(speed + 15);
+        } else {
+            updateSpeed(15);
+        }
+        lastAngle = idealAngle;
+
     }
 
     private:
     int16_t speed = 0;
+    int16_t lastAngle = 0;
     geometry_msgs::Point32 ball_position;
     geometry_msgs::Point32 target;
 
