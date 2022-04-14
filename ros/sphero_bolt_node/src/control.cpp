@@ -35,7 +35,7 @@ class TargetAngleControl {
 
     void updateSpeed(int16_t newSpeed) {
         newSpeed = std::min(newSpeed, (int16_t)255);
-        if (newSpeed == speed ) 
+        if (newSpeed == speed) 
             return;
 
         std::cout << "publishing speed: " << newSpeed << std::endl;
@@ -90,11 +90,11 @@ class TargetAngleControl {
         std::cout << "target angle: " << idealAngle << std::endl;
         std::cout << "------------------------------------" << std::endl;
         std_msgs::Int16 output;
+		
 
-
-        if (idealAngle == heading) {
+        if (heading - 1 <= idealAngle && idealAngle <= heading + 1) {
             //updateSpeed(speed + 15);
-            updateSpeed(speed + 5);
+            updateSpeed(speed + 2);
         } else {
             updateSpeed(15);
         }
