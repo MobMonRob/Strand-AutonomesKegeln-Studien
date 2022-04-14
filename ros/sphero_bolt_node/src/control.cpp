@@ -35,7 +35,7 @@ class TargetAngleControl {
 
     void updateSpeed(int16_t newSpeed) {
         newSpeed = std::min(newSpeed, (int16_t)255);
-        if(newSpeed == speed ) 
+        if (newSpeed == speed ) 
             return;
 
         std::cout << "publishing speed: " << newSpeed << std::endl;
@@ -44,6 +44,18 @@ class TargetAngleControl {
         speed = newSpeed;
         publisherSpeed.publish(output);
     }
+
+	void updateHeading(int16_t newHeading) {
+		newHeading = std::min(newHeading, (int16_t)360);
+		if (newHeading == heading)
+			return;
+
+        std::cout << "publishing heading: " << newHeading << std::endl;
+        std_msgs::Int16 output;
+        output.data = newHeading;
+        heading = newHeading;
+        publisherHeading.publish(output);
+	}
 
     void callbackNoBallDetected(std_msgs::Bool input) {
         updateSpeed(0);
@@ -80,22 +92,19 @@ class TargetAngleControl {
         std_msgs::Int16 output;
 
 
-
-        output.data = idealAngle;
-        publisherHeading.publish(output);
-
-        if (idealAngle == lastAngle) {
-            updateSpeed(speed + 15);
+        if (idealAngle == heading) {
+            //updateSpeed(speed + 15);
+            updateSpeed(speed + 5);
         } else {
             updateSpeed(15);
         }
-        lastAngle = idealAngle;
+		updateHeading(idealAngle);
 
     }
 
     private:
     int16_t speed = 0;
-    int16_t lastAngle = 0;
+    int16_t heading = 0;
     geometry_msgs::Point32 ball_position;
     geometry_msgs::Point32 target;
 

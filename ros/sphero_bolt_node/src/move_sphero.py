@@ -77,7 +77,7 @@ class SpheroControl:
 
     def callbackRoll(self, data):
         rospy.loginfo(f'rolling message: {data}')
-        self.bolt.roll(min(data.heading, 255), min(data.speed, 255), data.duration)
+        self.bolt.roll(min(data.heading, 360), min(data.speed, 255), data.duration)
 
     def callbackStopRoll(self, data):
         rospy.loginfo(f'stop')
@@ -87,7 +87,7 @@ class SpheroControl:
 
     def callbackHeading(self, data):
         rospy.loginfo(f'heading message. {data}')
-        newHeading = min(data.data, 255)
+        newHeading = min(data.data, 360)
         if newHeading == self.heading:
             return
         else:
