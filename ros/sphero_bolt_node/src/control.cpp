@@ -17,7 +17,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <cmath>
-
+#include <algorithm>
 
 
 class TargetAngleControl {
@@ -34,7 +34,8 @@ class TargetAngleControl {
     }
 
     void updateSpeed(int16_t newSpeed) {
-        if(newSpeed == speed) 
+        newSpeed = std::max(newSpeed, (int16_t)255);
+        if(newSpeed == speed ) 
             return;
 
         std::cout << "publishing speed: " << newSpeed << std::endl;
@@ -84,7 +85,7 @@ class TargetAngleControl {
         publisherHeading.publish(output);
 
         if (idealAngle == lastAngle) {
-            updateSpeed(speed + 15);
+            updateSpeed(speed);
         } else {
             updateSpeed(15);
         }
