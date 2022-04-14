@@ -66,8 +66,6 @@ class SpheroControl:
         self.bolt = bolt
         self.bolt.reset_aim()
         self.bolt.set_main_led(Color(r=0, g=255, b=0)) #Sets whole Matrix
-        self.heading = 0
-        self.speed = 0
 
         rospy.Subscriber('sphero_control/roll', Roll, self.callbackRoll, bolt, queue_size=1)
         rospy.Subscriber('sphero_control/heading', Int16, self.callbackHeading, queue_size=1)
@@ -81,29 +79,18 @@ class SpheroControl:
 
     def callbackStopRoll(self, data):
         rospy.loginfo(f'stop')
-        self.speed = 0
         self.bolt.stop_roll()
 
 
     def callbackHeading(self, data):
         rospy.loginfo(f'heading message. {data}')
         newHeading = min(data.data, 360)
-        if newHeading == self.heading:
-            return
-        else:
-            self.heading = newHeading
-            self.bolt.set_heading(newHeading)
+        self.bolt.set_heading(newHeading)
 
     def callbackSpeed(self, data):
         rospy.loginfo(f'speed message. {data}')
         newSpeed = min(data.data, 255)
-        if newSpeed == self.speed:
-            return
-        else:
-            self.speed = newSpeed
-            self.bolt.set_speed(newSpeed)
-
-
+        self.bolt.set_speed(newSpeed)
 
 
 def main():
