@@ -6,6 +6,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <geometry_msgs/Point32.h>
+#include <std_msgs/Bool.h>
 
         
 #include <pcl_conversions/pcl_conversions.h>
@@ -23,11 +24,28 @@ class TargetAngleControl {
     public:
     TargetAngleControl() {
         //fix position for development
-        target.x = 0.628f;
-        target.y = -0.782f;
+        target.x = 0.681f;
+        target.y = -1.07f;
 
-        sub = nh.subscribe("ball_position", 1, &TargetAngleControl::callback, this);
-        pub = nh.advertise<std_msgs::Int16>("sphero_control/heading", 1);
+        subscriberNoBallDetected = nh.subscribe("no_ball_detected", 1, &TargetAngleControl::callbackNoBallDetected, this);
+        subscriberBallPosition = nh.subscribe("ball_position", 1, &TargetAngleControl::callbackBallPosition, this);
+        publisherHeading = nh.advertise<std_msgs::Int16>("sphero_control/heading", 1);
+        publisherSpeed = nh.advertise<std_msgs::Int16>("sphero_control/speed", 1);
+    }
+
+    void updateSpeed(int16_t newSpeed) {
+        if(newSpeed == speed) 
+            return;
+
+        std::cout << "publishing speed: " << newSpeed << std::endl;
+        std_msgs::Int16 output;
+        output.data = newSpeed;
+        speed = newSpeed;
+        publisherSpeed.publish(output);
+    }
+
+    void callbackNoBallDetected(std_msgs::Bool input) {
+        updateSpeed(0);
     }
 
     bool ballIsAboveTarget() {
@@ -51,7 +69,7 @@ class TargetAngleControl {
     }
 
 
-    void callback(geometry_msgs::Point32 input) {
+    void callbackBallPosition(geometry_msgs::Point32 input) {
         ball_position = input;
 
         std::cout << "x:\t" << input.x << "y:\t" << input.y << "z:\t" << input.z << std::endl;
@@ -59,16 +77,20 @@ class TargetAngleControl {
         std::cout << "------------------------------------" << std::endl;
         std_msgs::Int16 output;
         output.data = (int16_t) idealAngle();
-        pub.publish(output);
+        publisherHeading.publish(output);
+        updateSpeed(15);
     }
 
     private:
+    int16_t speed = 0;
     geometry_msgs::Point32 ball_position;
     geometry_msgs::Point32 target;
 
     ros::NodeHandle nh;
-    ros::Subscriber sub;
-    ros::Publisher pub;
+    ros::Subscriber subscriberBallPosition;
+    ros::Subscriber subscriberNoBallDetected;
+    ros::Publisher publisherSpeed;
+    ros::Publisher publisherHeading;
 };
 
 
