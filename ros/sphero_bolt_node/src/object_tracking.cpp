@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <ros/console.h>
 // PCL specific includes
 #include <sensor_msgs/PointCloud.h>
 #include <sensor_msgs/PointCloud2.h>
@@ -96,7 +97,7 @@ class PositionDetection {
     for(const auto& cluster: clusters) {
       const auto distance = getClusterDistanceToOrigin(cluster);
       const auto expectedPoints = expectedBallPoints(distance);
-      std::cout << "distance: " << distance << "\texpected points: " << expectedPoints << "actual points: " << cluster.points.size() << std::endl;
+      ROS_INFO_STREAM("distance: " << distance << " expected points: " << expectedPoints << " actual points: " << cluster.points.size());
 
       if (expectedPoints - clusterPointTolerance  <= cluster.points.size() && cluster.points.size() <= expectedPoints + clusterPointTolerance ) {
         return cluster;
@@ -141,7 +142,7 @@ class PositionDetection {
     if (currentCluster.points.size() >= 4)
       clusters.push_back(currentCluster);
 
-    std::cout << "clusters: " << clusters.size() << " " << std::endl;
+    ROS_INFO_STREAM("clusters found: " << clusters.size());
 
     //lol
 
@@ -150,8 +151,8 @@ class PositionDetection {
     auto ballLocation = getClusterLocation(ballCluster); 
 
 
-    std::cout << "found ballcluster with size: " << ballCluster.points.size() << "\nx:\t" << ballLocation.x  << 
-    "\ty:\t" << ballLocation.y << "\tz:\t" << ballLocation.z << std::endl;
+    ROS_INFO_STREAM("found ballcluster with size: " <<  ballCluster.points.size() << " x: " << ballLocation.x  << 
+    " y: " << ballLocation.y << " z: " << ballLocation.z);
 
     auto output = geometry_msgs::Point32();
     output.x = ballLocation.x;
