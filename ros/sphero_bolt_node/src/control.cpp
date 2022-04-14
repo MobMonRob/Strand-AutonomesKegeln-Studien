@@ -38,7 +38,7 @@ class TargetAngleControl {
         if (newSpeed == speed) 
             return;
 
-        std::cout << "publishing speed: " << newSpeed << std::endl;
+        ROS_INFO_STREAM("publishing speed: " << newSpeed);
         std_msgs::Int16 output;
         output.data = newSpeed;
         speed = newSpeed;
@@ -50,7 +50,7 @@ class TargetAngleControl {
 		if (newHeading == heading)
 			return;
 
-        std::cout << "publishing heading: " << newHeading << std::endl;
+        ROS_INFO_STREAM("publishing heading: " << newHeading);
         std_msgs::Int16 output;
         output.data = newHeading;
         heading = newHeading;
@@ -71,7 +71,7 @@ class TargetAngleControl {
         float deltaY = fabs(ball_position.y - target.y);
         float angle = radiantToDegreeFactor*atanf(deltaY/deltaX);
 
-        std::cout << "deltax: " << deltaX << "deltay: " << deltaY << "angle: " << angle << std::endl;
+        ROS_INFO_STREAM("deltax: " << deltaX << "deltay: " << deltaY << "angle: " << angle);
         //0 degree means the sphero goes straight
         //for a detailed epxlanation look into the documentation
         if (ballIsAboveTarget()) {
@@ -85,12 +85,10 @@ class TargetAngleControl {
     void callbackBallPosition(geometry_msgs::Point32 input) {
         ball_position = input;
         int16_t idealAngle = (int16_t) getIdealAngle();
-
-        std::cout << "x:\t" << input.x << "y:\t" << input.y << "z:\t" << input.z << std::endl;
-        std::cout << "target angle: " << idealAngle << std::endl;
-        std::cout << "------------------------------------" << std::endl;
         std_msgs::Int16 output;
 		
+        ROS_INFO_STREAM("Position x: " << input.x << " y: " << input.y << " z: " << input.z
+        << "ideal heading: " << idealAngle);
 
         if (heading - 1 <= idealAngle && idealAngle <= heading + 1) {
             //updateSpeed(speed + 15);
