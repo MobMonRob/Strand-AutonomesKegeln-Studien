@@ -49,10 +49,10 @@ def listener(bolt):
 # run simultaneously.
     rospy.init_node('sphero', anonymous=True)
     rospy.loginfo('listener node is up')
-    rospy.Subscriber('sphero_control/roll', Roll, callbackRoll, bolt, 1, 1)
-    rospy.Subscriber('sphero_control/heading', Int16, callbackHeading, bolt, 1, 1)
-    rospy.Subscriber('sphero_control/speed', Int16, callbackSpeed, bolt, 1, 1)
-    rospy.Subscriber('sphero_control/stopRoll', Empty, callbackStopRoll, bolt, 1, 1)
+    rospy.Subscriber('sphero_control/roll', Roll, callbackRoll, bolt, 1)
+    rospy.Subscriber('sphero_control/heading', Int16, callbackHeading, bolt, 1)
+    rospy.Subscriber('sphero_control/speed', Int16, callbackSpeed, bolt, 1)
+    rospy.Subscriber('sphero_control/stopRoll', Empty, callbackStopRoll, bolt, 1)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
@@ -69,10 +69,10 @@ class SpheroControl:
         self.heading = 0
         self.speed = 0
 
-        rospy.Subscriber('sphero_control/roll', Roll, self.callbackRoll, bolt, queue_size=1, buff_size=1)
-        rospy.Subscriber('sphero_control/heading', Int16, self.callbackHeading, queue_size=1, buff_size=1)
-        rospy.Subscriber('sphero_control/speed', Int16, self.callbackSpeed, queue_size=1, buff_size=1)
-        rospy.Subscriber('sphero_control/stopRoll', Empty, self.callbackStopRoll, queue_size=1, buff_size=1)
+        rospy.Subscriber('sphero_control/roll', Roll, self.callbackRoll, bolt, queue_size=1)
+        rospy.Subscriber('sphero_control/heading', Int16, self.callbackHeading, queue_size=1)
+        rospy.Subscriber('sphero_control/speed', Int16, self.callbackSpeed, queue_size=1)
+        rospy.Subscriber('sphero_control/stopRoll', Empty, self.callbackStopRoll, queue_size=1)
 
 
     def callbackRoll(self, data):
