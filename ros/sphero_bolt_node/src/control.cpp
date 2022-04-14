@@ -85,7 +85,7 @@ class TargetAngleControl {
         publisherHeading.publish(output);
 
         if (idealAngle == lastAngle) {
-            updateSpeed(speed);
+            updateSpeed(speed + 15);
         } else {
             updateSpeed(15);
         }
