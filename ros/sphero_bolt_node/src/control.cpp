@@ -34,7 +34,7 @@ class TargetAngleControl {
     }
 
     void updateSpeed(int16_t newSpeed) {
-        newSpeed = std::max(newSpeed, (int16_t)255);
+        newSpeed = std::min(newSpeed, (int16_t)255);
         if(newSpeed == speed ) 
             return;
 
