@@ -4,7 +4,7 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud_conversion.h>
 #include <geometry_msgs/Point32.h>
-
+#include <std_msgs/Bool.h>
         
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -34,15 +34,20 @@ class PositionDetection {
   const float FIELDSIZE_X = 1.35f;
   const float FIELDSIZE_Y = 3.0f;
   const float EPSILON_POINT_DISTANCE = 0.035f;
+
+  bool ballDetected = false;
+
   ros::NodeHandle nh;
   ros::Subscriber sub;
-  ros::Publisher pub;
+  ros::Publisher publisherPosition;
+  ros::Publisher noPositionPublisher;
 
 
   public:
   PositionDetection() {
     sub = nh.subscribe("cloud", 1, &PositionDetection::callback, this);
-    pub = nh.advertise<geometry_msgs::Point32>("/ball_position", 1);
+    publisherPosition = nh.advertise<geometry_msgs::Point32>("/ball_position", 1);
+    noPositionPublisher = nh.advertise<std_msgs::Bool>("/no_ball_detected", 1);
   }
 
   private:
@@ -152,9 +157,11 @@ class PositionDetection {
     output.x = ballLocation.x;
     output.y = ballLocation.y;
     output.z = ballLocation.z;
-    pub.publish(output);
+    publisherPosition.publish(output);
     } catch (const std::exception& err) {
-      std::cout << err.what() << std::endl;
+      auto output = std_msgs::Bool();
+      output.data = true;
+      noPositionPublisher.publish(output);
     }
   }
 };
