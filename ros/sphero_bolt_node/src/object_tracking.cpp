@@ -67,6 +67,15 @@ class PositionDetection {
     return pcl::PointXYZ(x, y, z);
   }
 
+  pcl::PointXYZ getBallClusterLocation(const Cluster& cluster) {
+    pcl::PointXYZ result = cluster.points[0];
+    for (int i = 1; i < cluster.points.size(); i++) {
+      if (cluster.points[i].x < result.x)
+        result = cluster.points[i];
+    }
+    return result;
+  }
+
   bool pointIsInField(const pcl::PointXYZ& point) {
     const float yOffset = FIELDSIZE_Y / 2.0f;
     if (yOffset < abs(point.y))
@@ -148,7 +157,7 @@ class PositionDetection {
 
     try {
     auto ballCluster = getBallCluster(clusters);
-    auto ballLocation = getClusterLocation(ballCluster); 
+    auto ballLocation = getBallClusterLocation(ballCluster); 
 
 
     ROS_INFO_STREAM("found ballcluster with size: " <<  ballCluster.points.size() << " x: " << ballLocation.x  << 

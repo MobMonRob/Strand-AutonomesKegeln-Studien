@@ -19,6 +19,12 @@
 #include <cmath>
 #include <algorithm>
 
+#include "FuturePositionPrediction.h"
+/*struct BufferedPosition {
+    pcl::PointXYZ position;
+    double timeStamp;
+    bool ballFound = false;
+};*/
 
 class TargetAngleControl {
     public:
@@ -60,35 +66,57 @@ class TargetAngleControl {
 
     void callbackNoBallDetected(std_msgs::Bool input) {
 		ROS_INFO("No ball detected");
+        BufferedPosition positionToBeBuffered;
+        positionToBeBuffered.ballFound = false;
+        positionPredictor.add(positionToBeBuffered);
         updateSpeed(0);
     }
 
-    bool ballIsAboveTarget() {
-        return ball_position.x >= target.x;
+    bool positionIsAboveTarget(pcl::PointXYZ position, pcl::PointXYZ target) {
+        return position.x >= target.x;
     }
 
-    float getIdealAngle() {
+    float getIdealAngle(pcl::PointXYZ position, pcl::PointXYZ target) {
         const float radiantToDegreeFactor = 180/M_PI; //deg/Rad = 360/2pi -> deg = pi*Rad/180
-        float deltaX = fabs(ball_position.x - target.x);
-        float deltaY = fabs(ball_position.y - target.y);
+        float deltaX = fabs(position.x - target.x);
+        float deltaY = fabs(position.y - target.y);
         float angle = radiantToDegreeFactor*atanf(deltaY/deltaX);
 
         ROS_INFO_STREAM("deltax: " << deltaX << "deltay: " << deltaY << "angle: " << angle);
         //0 degree means the sphero goes straight
         //for a detailed epxlanation look into the documentation
-        if (ballIsAboveTarget()) {
+        if (positionIsAboveTarget(position, target)) {
             return 90.0f - angle;
         } else {
             return 360.0f - (90.0f - angle);
         }
     }
 
+    /*pcl::PointXYZ getFuturePosition(pcl::PointXYZ currentPosition, double timeStamp) {
+        if (!lastPosition.ballFound)
+            return currentPosition;
+        
+        double time = timeStamp - lastPosition.timeStamp;
+        float xVelocity = (currentPosition.x - lastPosition.position.x) / time;
+        float yVelocity = (currentPosition.y - lastPosition.position.y) / time;
+        pcl::PointXYZ futurePosition(currentPosition.x + xVelocity * time, currentPosition.y + yVelocity * time, currentPosition.z); 
+
+        double absoluteVelocity = sqrtf(powf(xVelocity, 2.0) + powf(yVelocity, 2.0)); 
+        ROS_INFO_STREAM("Ball belocity: " << absoluteVelocity);
+
+        return futurePosition;
+    }*/
 
     void callbackBallPosition(geometry_msgs::Point32 input) {
-        ball_position = input;
-        int16_t idealAngle = (int16_t) getIdealAngle();
+        pcl::PointXYZ ballPosition = pcl::PointXYZ(input.x, input.y, input.z);
+        double timeStamp = ros::Time::now().toSec();
+
+        auto future_position = positionPredictor.predictPosition(ballPosition, timeStamp);
+
+        int16_t idealAngle = (int16_t) getIdealAngle(future_position, target);
         std_msgs::Int16 output;
 		
+
         ROS_INFO_STREAM("Position x: " << input.x << " y: " << input.y << " z: " << input.z
         << "ideal heading: " << idealAngle);
 
@@ -100,13 +128,19 @@ class TargetAngleControl {
         }
 		updateHeading(idealAngle);
 
+        BufferedPosition positionToBeBuffered;
+        positionToBeBuffered.ballFound = true;
+        positionToBeBuffered.position = ballPosition;
+        positionToBeBuffered.timeStamp = timeStamp;
+        positionPredictor.add(positionToBeBuffered);
     }
 
     private:
     int16_t speed = 0;
     int16_t heading = 0;
-    geometry_msgs::Point32 ball_position;
-    geometry_msgs::Point32 target;
+    pcl::PointXYZ target;
+
+    FuturePositionPrediction positionPredictor;
 
     ros::NodeHandle nh;
     ros::Subscriber subscriberBallPosition;
