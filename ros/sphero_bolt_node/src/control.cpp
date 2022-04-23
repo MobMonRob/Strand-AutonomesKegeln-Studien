@@ -20,11 +20,6 @@
 #include <algorithm>
 
 #include "FuturePositionPrediction.h"
-/*struct BufferedPosition {
-    pcl::PointXYZ position;
-    double timeStamp;
-    bool ballFound = false;
-};*/
 
 class TargetAngleControl {
     public:
@@ -92,21 +87,6 @@ class TargetAngleControl {
         }
     }
 
-    /*pcl::PointXYZ getFuturePosition(pcl::PointXYZ currentPosition, double timeStamp) {
-        if (!lastPosition.ballFound)
-            return currentPosition;
-        
-        double time = timeStamp - lastPosition.timeStamp;
-        float xVelocity = (currentPosition.x - lastPosition.position.x) / time;
-        float yVelocity = (currentPosition.y - lastPosition.position.y) / time;
-        pcl::PointXYZ futurePosition(currentPosition.x + xVelocity * time, currentPosition.y + yVelocity * time, currentPosition.z); 
-
-        double absoluteVelocity = sqrtf(powf(xVelocity, 2.0) + powf(yVelocity, 2.0)); 
-        ROS_INFO_STREAM("Ball belocity: " << absoluteVelocity);
-
-        return futurePosition;
-    }*/
-
     void callbackBallPosition(geometry_msgs::Point32 input) {
         pcl::PointXYZ ballPosition = pcl::PointXYZ(input.x, input.y, input.z);
         double timeStamp = ros::Time::now().toSec();
@@ -154,12 +134,7 @@ int main (int argc, char** argv)
 {
   // Initialize ROS
   ros::init (argc, argv, "control");
-/*  ros::NodeHandle nh;
 
-  // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("cloud", 1, cloud_cb);
-  ros::Publisher pub = nh.advertise<geometry_msgs::Point32>("/ball_position");*/
-  // Spin
   TargetAngleControl targetAngleControl;
 
   ros::spin ();
