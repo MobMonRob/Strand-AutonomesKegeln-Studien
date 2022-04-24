@@ -30,8 +30,8 @@ class TargetAngleControl {
     public:
     TargetAngleControl() {
         //fix position for development
-        target.x = 0.681f;
-        target.y = -1.07f;
+        target.x = 0.893f;
+        target.y = -1.35f;
 
         subscriberNoBallDetected = nh.subscribe("no_ball_detected", 1, &TargetAngleControl::callbackNoBallDetected, this);
         subscriberBallPosition = nh.subscribe("ball_position", 1, &TargetAngleControl::callbackBallPosition, this);
@@ -40,7 +40,7 @@ class TargetAngleControl {
     }
 
     void updateSpeed(int16_t newSpeed) {
-        newSpeed = std::min(newSpeed, (int16_t)255);
+        newSpeed = std::max((int16_t)0, std::min(newSpeed, (int16_t)255));
         if (newSpeed == speed) 
             return;
 
@@ -69,7 +69,7 @@ class TargetAngleControl {
         BufferedPosition positionToBeBuffered;
         positionToBeBuffered.ballFound = false;
         positionPredictor.add(positionToBeBuffered);
-        updateSpeed(0);
+        updateSpeed(speed - 15);
     }
 
     bool positionIsAboveTarget(pcl::PointXYZ position, pcl::PointXYZ target) {
