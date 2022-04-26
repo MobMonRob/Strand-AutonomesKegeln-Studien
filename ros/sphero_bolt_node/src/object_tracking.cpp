@@ -42,6 +42,8 @@ class PositionDetection {
   ros::Subscriber sub;
   ros::Publisher publisherPosition;
   ros::Publisher noPositionPublisher;
+  ros::Publisher targetPositionPublisher;
+  double lastBallDetection;
 
 
   public:
@@ -49,6 +51,8 @@ class PositionDetection {
     sub = nh.subscribe("cloud", 1, &PositionDetection::callback, this);
     publisherPosition = nh.advertise<geometry_msgs::Point32>("/ball_position", 1);
     noPositionPublisher = nh.advertise<std_msgs::Bool>("/no_ball_detected", 1);
+
+    targetPositionPublisher  = nh.advertise<geometry_msgs::Point32>("/target", 1);
   }
 
   private:
@@ -115,6 +119,42 @@ class PositionDetection {
     throw std::invalid_argument("Ball not found");
   }
 
+  const Cluster& getClusterWithMostPoints(const std::vector<Cluster>& clusters) {
+    int maxPoints = 0;
+    int targetIndex = 0;
+    for (int i = 0; i < clusters.size(); i++) {
+      if (clusters[i].points.size() > maxPoints) {
+        targetIndex = i;
+        maxPoints = clusters[i].points.size();
+      }
+    }
+    return clusters[targetIndex];
+  }
+
+  bool pointIsRightOfSensor(const pcl::PointXYZ point) {
+    return point.y < 0;
+  }
+
+  pcl::PointXYZ getTargetLocation(const Cluster& targetCluster) {
+    auto clusterLocation = getClusterLocation(targetCluster);
+    auto result = targetCluster.points[0];
+    //point is right to
+    if (pointIsRightOfSensor(clusterLocation)) {
+      for (int i = 0; i < targetCluster.points.size(); i++) {
+        if (targetCluster.points[i].y > result.y)
+          result = targetCluster.points[i];
+      }
+    } else {
+      for (int i = 0; i < targetCluster.points.size(); i++) {
+        if (targetCluster.points[i].y < result.y)
+          result = targetCluster.points[i];
+      }
+    }
+    return result;
+  }
+
+  
+
   void 
   callback (const sensor_msgs::PointCloud2ConstPtr& input)
   {
@@ -153,11 +193,27 @@ class PositionDetection {
 
     ROS_INFO_STREAM("clusters found: " << clusters.size());
 
-    //lol
-
     try {
     auto ballCluster = getBallCluster(clusters);
     auto ballLocation = getBallClusterLocation(ballCluster); 
+    lastBallDetection = ros::Time::now().toSec();
+    
+    /*if (clusters.size() > 1) {
+      auto targetCluster = getClusterWithMostPoints(clusters);
+      auto targetLocation = getTargetLocation(targetCluster);
+
+      //only update if distance between ball and target is bigger than 50cm
+      if (sqrtf(powf(targetLocation.x - ballLocation.x, 2.0f) + powf(targetLocation.y - ballLocation.y, 2.0f)) > 0.5) {
+        ROS_INFO_STREAM("Found target cluster with size: " << targetCluster.points.size() << " x: " << targetLocation.x << 
+        " y: " << targetLocation.y << " z: " << targetLocation.z);
+        ROS_INFO_STREAM("distance to ball: " << sqrtf(powf(targetLocation.x - ballLocation.x, 2.0f) + powf(targetLocation.y - ballLocation.y, 2.0f))); 
+        auto targetOutput = geometry_msgs::Point32();
+        targetOutput.x = targetLocation.x;
+        targetOutput.y = targetLocation.y;
+        targetOutput.z = targetLocation.z;
+        targetPositionPublisher.publish(targetOutput);
+      }
+    }*/
 
 
     ROS_INFO_STREAM("found ballcluster with size: " <<  ballCluster.points.size() << " x: " << ballLocation.x  << 
@@ -173,6 +229,22 @@ class PositionDetection {
       auto output = std_msgs::Bool();
       output.data = true;
       noPositionPublisher.publish(output);
+
+      //haven't found the ball in more than one second
+      if (ros::Time::now().toSec() - lastBallDetection > 1.0) {
+
+        auto targetCluster = getClusterWithMostPoints(clusters);
+        auto targetLocation = getTargetLocation(targetCluster);
+
+        ROS_INFO_STREAM("Found target cluster with size: " << targetCluster.points.size() << " x: " << targetLocation.x << 
+        " y: " << targetLocation.y << " z: " << targetLocation.z);
+
+        auto targetOutput = geometry_msgs::Point32();
+        targetOutput.x = targetLocation.x;
+        targetOutput.y = targetLocation.y;
+        targetOutput.z = targetLocation.z;
+        targetPositionPublisher.publish(targetOutput);
+      }
     }
   }
 };

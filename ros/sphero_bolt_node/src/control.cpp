@@ -24,12 +24,11 @@
 class TargetAngleControl {
     public:
     TargetAngleControl() {
-        //fix position for development
-        target.x = 0.893f;
-        target.y = -1.35f;
 
         subscriberNoBallDetected = nh.subscribe("no_ball_detected", 1, &TargetAngleControl::callbackNoBallDetected, this);
         subscriberBallPosition = nh.subscribe("ball_position", 1, &TargetAngleControl::callbackBallPosition, this);
+
+        subscriberTargetPosition = nh.subscribe("target", 1, &TargetAngleControl::callbackTargetPosition, this);
         publisherHeading = nh.advertise<std_msgs::Int16>("sphero_control/heading", 1);
         publisherSpeed = nh.advertise<std_msgs::Int16>("sphero_control/speed", 1);
     }
@@ -115,6 +114,18 @@ class TargetAngleControl {
         positionPredictor.add(positionToBeBuffered);
     }
 
+    
+    void callbackTargetPosition(geometry_msgs::Point32 input) {
+        
+        float distanceToOldTarget = sqrtf(powf(target.x - input.x, 2.0f) + powf(target.y - input.y, 2.0f));
+        if (distanceToOldTarget > 0.02f) {
+            target.x = input.x;
+            target.y = input.y;
+            ROS_INFO_STREAM("Updated target to: " << " x: " << target.x << " y: " << target.y);
+        }
+    }
+
+
     private:
     int16_t speed = 0;
     int16_t heading = 0;
@@ -125,6 +136,8 @@ class TargetAngleControl {
     ros::NodeHandle nh;
     ros::Subscriber subscriberBallPosition;
     ros::Subscriber subscriberNoBallDetected;
+    ros::Subscriber subscriberTargetPosition;
+
     ros::Publisher publisherSpeed;
     ros::Publisher publisherHeading;
 };
