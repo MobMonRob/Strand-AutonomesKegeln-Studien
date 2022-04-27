@@ -39,7 +39,6 @@ class PositionDetection {
   void 
   callback (const sensor_msgs::PointCloud2ConstPtr& input)
   {
-    //convert input to pcl::PointCloud<pcl::PointXYZ>
     pcl::PCLPointCloud2 pcl_pc2;
     pcl_conversions::toPCL(*input,pcl_pc2);
     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
@@ -242,14 +241,7 @@ class PositionDetection {
 
 int main (int argc, char** argv)
 {
-  // Initialize ROS
   ros::init (argc, argv, "sensor_processing");
-/*  ros::NodeHandle nh;
-
-  // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("cloud", 1, cloud_cb);
-  ros::Publisher pub = nh.advertise<geometry_msgs::Point32>("/ball_position");*/
-  // Spin
   PositionDetection positionDetection;
 
   ros::spin ();
