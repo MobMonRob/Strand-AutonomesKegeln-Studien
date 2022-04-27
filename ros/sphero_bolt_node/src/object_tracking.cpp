@@ -44,34 +44,12 @@ class PositionDetection {
     pcl::PointCloud<pcl::PointXYZ>::Ptr temp_cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::fromPCLPointCloud2(pcl_pc2,*temp_cloud);
 
-    std::vector<Cluster> clusters;
-    auto currentCluster = Cluster();
-    
-
-    //build clusters
-    for(auto& point: temp_cloud->points) {
-      if (point.x == 0 && point.y == 0 && point.z == 0) {
-        continue;
-      }
-      if (!pointIsInField(point))
-        continue;
-
-      float distanceToLastPoint = 0;
-      if (currentCluster.points.size() > 0)
-        distanceToLastPoint =  pcl::euclideanDistance(point, currentCluster.points.back());
-
-      if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
-        //filter out clusters which consist of less than four points
-        if (currentCluster.points.size() >= 4)
-          clusters.push_back(currentCluster);
-        currentCluster = Cluster();
-      }
-      currentCluster.points.push_back(pcl::PointXYZ(point));
-    }
-    if (currentCluster.points.size() >= 4)
-      clusters.push_back(currentCluster);
+    auto clusters = getClusters(temp_cloud);
 
     ROS_INFO_STREAM("clusters found: " << clusters.size());
+
+    if (clusters.size() == 0)
+      return;
 
     try {
     auto ballCluster = getBallCluster(clusters);
@@ -112,6 +90,35 @@ class PositionDetection {
 
 
   private:
+  std::vector<Cluster> getClusters(const pcl::PointCloud<pcl::PointXYZ>::Ptr points) {
+
+    std::vector<Cluster> clusters;
+    auto currentCluster = Cluster();
+
+    for(auto& point: points->points) {
+      if (point.x == 0 && point.y == 0 && point.z == 0) {
+        continue;
+      }
+      if (!pointIsInField(point))
+        continue;
+
+      float distanceToLastPoint = 0;
+      if (currentCluster.points.size() > 0)
+        distanceToLastPoint =  pcl::euclideanDistance(point, currentCluster.points.back());
+
+      if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
+        //filter out clusters which consist of less than four points
+        if (currentCluster.points.size() >= 4)
+          clusters.push_back(currentCluster);
+        currentCluster = Cluster();
+      }
+      currentCluster.points.push_back(pcl::PointXYZ(point));
+    }
+    if (currentCluster.points.size() >= 4)
+      clusters.push_back(currentCluster);
+
+    return clusters;
+  }
 
   bool pointIsInField(const pcl::PointXYZ& point) {
     const float yOffset = FIELDSIZE_Y / 2.0f;
