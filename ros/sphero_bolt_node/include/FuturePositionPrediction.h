@@ -6,7 +6,6 @@
 
 struct BufferedPosition {
     pcl::PointXYZ position;
-    double timeStamp;
     bool ballFound = false;
 };
 
@@ -28,7 +27,7 @@ class FuturePositionPrediction {
     public:
 
         void add(BufferedPosition);
-        pcl::PointXYZ predictPosition(pcl::PointXYZ currentPosition, double timeStamp);
+        pcl::PointXYZ predictPosition(pcl::PointXYZ currentPosition);
 };
 
 

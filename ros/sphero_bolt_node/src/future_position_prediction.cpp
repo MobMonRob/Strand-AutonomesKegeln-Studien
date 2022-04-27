@@ -24,7 +24,7 @@ size_t FuturePositionPrediction::getBufferedPosition() {
 }
 
 
-pcl::PointXYZ FuturePositionPrediction::predictPosition(pcl::PointXYZ currentPosition, double timeStamp) {
+pcl::PointXYZ FuturePositionPrediction::predictPosition(pcl::PointXYZ currentPosition) {
     if (buffer.size() < 4)
         return currentPosition;
     
@@ -37,7 +37,6 @@ pcl::PointXYZ FuturePositionPrediction::predictPosition(pcl::PointXYZ currentPos
         size_t offset = getBufferedPosition();
         auto comparedPosition = buffer[offset];
         double time = offset * 0.04;
-        //double time = timeStamp - comparedPosition.timeStamp;
          
         float xVelocity = (currentPosition.x - comparedPosition.position.x) / time;
         float yVelocity = (currentPosition.y - comparedPosition.position.y) / time;

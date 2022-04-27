@@ -88,9 +88,8 @@ class TargetAngleControl {
 
     void callbackBallPosition(geometry_msgs::Point32 input) {
         pcl::PointXYZ ballPosition = pcl::PointXYZ(input.x, input.y, input.z);
-        double timeStamp = ros::Time::now().toSec();
 
-        auto future_position = positionPredictor.predictPosition(ballPosition, timeStamp);
+        auto future_position = positionPredictor.predictPosition(ballPosition);
 
         int16_t idealAngle = (int16_t) getIdealAngle(future_position, target);
         std_msgs::Int16 output;
@@ -110,7 +109,6 @@ class TargetAngleControl {
         BufferedPosition positionToBeBuffered;
         positionToBeBuffered.ballFound = true;
         positionToBeBuffered.position = ballPosition;
-        positionToBeBuffered.timeStamp = timeStamp;
         positionPredictor.add(positionToBeBuffered);
     }
 
