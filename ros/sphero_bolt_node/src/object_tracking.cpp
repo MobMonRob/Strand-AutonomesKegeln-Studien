@@ -78,25 +78,7 @@ class PositionDetection {
     auto ballCluster = getBallCluster(clusters);
     auto ballLocation = getBallClusterLocation(ballCluster); 
     lastBallDetection = ros::Time::now().toSec();
-    
-    /*if (clusters.size() > 1) {
-      auto targetCluster = getClusterWithMostPoints(clusters);
-      auto targetLocation = getTargetLocation(targetCluster);
-
-      //only update if distance between ball and target is bigger than 50cm
-      if (sqrtf(powf(targetLocation.x - ballLocation.x, 2.0f) + powf(targetLocation.y - ballLocation.y, 2.0f)) > 0.5) {
-        ROS_INFO_STREAM("Found target cluster with size: " << targetCluster.points.size() << " x: " << targetLocation.x << 
-        " y: " << targetLocation.y << " z: " << targetLocation.z);
-        ROS_INFO_STREAM("distance to ball: " << sqrtf(powf(targetLocation.x - ballLocation.x, 2.0f) + powf(targetLocation.y - ballLocation.y, 2.0f))); 
-        auto targetOutput = geometry_msgs::Point32();
-        targetOutput.x = targetLocation.x;
-        targetOutput.y = targetLocation.y;
-        targetOutput.z = targetLocation.z;
-        targetPositionPublisher.publish(targetOutput);
-      }
-    }*/
-
-
+     
     ROS_INFO_STREAM("found ballcluster with size: " <<  ballCluster.points.size() << " x: " << ballLocation.x  << 
     " y: " << ballLocation.y << " z: " << ballLocation.z);
 
