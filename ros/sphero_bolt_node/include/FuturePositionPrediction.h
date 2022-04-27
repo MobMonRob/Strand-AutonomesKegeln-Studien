@@ -11,6 +11,7 @@ struct BufferedPosition {
 
 class FuturePositionPrediction {
     private:
+        int scanFrequency;
         const size_t bufferSize = 10;
         const size_t compareOffset = 4;
         std::deque<BufferedPosition> buffer;
@@ -26,6 +27,7 @@ class FuturePositionPrediction {
 
     public:
 
+        FuturePositionPrediction(int scnFrequency) : scanFrequency(scnFrequency) {};
         void add(BufferedPosition);
         pcl::PointXYZ predictPosition(pcl::PointXYZ currentPosition);
 };

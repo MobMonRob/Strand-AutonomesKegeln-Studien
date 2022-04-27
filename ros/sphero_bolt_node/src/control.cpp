@@ -129,7 +129,7 @@ class TargetAngleControl {
     int16_t heading = 0;
     pcl::PointXYZ target;
 
-    FuturePositionPrediction positionPredictor;
+    FuturePositionPrediction positionPredictor = FuturePositionPrediction(25);
 
     ros::NodeHandle nh;
     ros::Subscriber subscriberBallPosition;

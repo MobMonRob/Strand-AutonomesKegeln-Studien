@@ -36,7 +36,7 @@ pcl::PointXYZ FuturePositionPrediction::predictPosition(pcl::PointXYZ currentPos
     try {
         size_t offset = getBufferedPosition();
         auto comparedPosition = buffer[offset];
-        double time = offset * 0.04;
+        double time = offset * (1.0 / scanFrequency);
          
         float xVelocity = (currentPosition.x - comparedPosition.position.x) / time;
         float yVelocity = (currentPosition.y - comparedPosition.position.y) / time;
