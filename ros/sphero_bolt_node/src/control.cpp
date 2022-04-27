@@ -125,11 +125,6 @@ class TargetAngleControl {
         publisherHeading.publish(output);
 	}
 
-
-
-
-    
-
     private:
     int16_t speed = 0;
     int16_t heading = 0;

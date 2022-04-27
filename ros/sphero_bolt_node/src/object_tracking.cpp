@@ -24,26 +24,6 @@ struct Cluster {
 };
 
 class PositionDetection {
-  private:
-  const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
-  const float spheroRadius = 0.0365f; //36.5mm
-  const float sensorAngleResolution = 0.16f;
-  const float heightOpticalAxis = 0.063; //63mm
-  const float spheroDiameterAtOpticalAxis = 2*sqrtf(powf(spheroRadius, 2.0)-powf(spheroRadius - heightOpticalAxis, 2.0)); //2*sqrt(r^2-(r-h)^2)
-  const int clusterPointTolerance = 10;
-
-  const float FIELDSIZE_X = 1.35f;
-  const float FIELDSIZE_Y = 3.0f;
-  const float EPSILON_POINT_DISTANCE = 0.035f;
-
-  bool ballDetected = false;
-
-  ros::NodeHandle nh;
-  ros::Subscriber sub;
-  ros::Publisher publisherPosition;
-  ros::Publisher noPositionPublisher;
-  ros::Publisher targetPositionPublisher;
-  double lastBallDetection;
 
 
   public:
@@ -247,6 +227,28 @@ class PositionDetection {
       }
     }
   }
+
+
+  private:
+  const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
+  const float spheroRadius = 0.0365f; //36.5mm
+  const float sensorAngleResolution = 0.16f;
+  const float heightOpticalAxis = 0.063; //63mm
+  const float spheroDiameterAtOpticalAxis = 2*sqrtf(powf(spheroRadius, 2.0)-powf(spheroRadius - heightOpticalAxis, 2.0)); //2*sqrt(r^2-(r-h)^2)
+  const int clusterPointTolerance = 10;
+
+  const float FIELDSIZE_X = 1.35f;
+  const float FIELDSIZE_Y = 3.0f;
+  const float EPSILON_POINT_DISTANCE = 0.035f;
+
+  bool ballDetected = false;
+
+  ros::NodeHandle nh;
+  ros::Subscriber sub;
+  ros::Publisher publisherPosition;
+  ros::Publisher noPositionPublisher;
+  ros::Publisher targetPositionPublisher;
+  double lastBallDetection;
 };
 
 
