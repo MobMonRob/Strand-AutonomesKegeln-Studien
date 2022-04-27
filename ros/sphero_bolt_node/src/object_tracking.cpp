@@ -35,105 +35,6 @@ class PositionDetection {
     targetPositionPublisher  = nh.advertise<geometry_msgs::Point32>("/target", 1);
   }
 
-  private:
-  const pcl::PointXYZ getClusterLocation(const Cluster& cluster) {
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-    for (auto& point: cluster.points) {
-      x += point.x;
-      y += point.y;
-    }
-    x = x / cluster.points.size();
-    y = y / cluster.points.size();
-    z = z / cluster.points.size();
-    
-    return pcl::PointXYZ(x, y, z);
-  }
-
-  pcl::PointXYZ getBallClusterLocation(const Cluster& cluster) {
-    pcl::PointXYZ result = cluster.points[0];
-    for (int i = 1; i < cluster.points.size(); i++) {
-      if (cluster.points[i].x < result.x)
-        result = cluster.points[i];
-    }
-    return result;
-  }
-
-  bool pointIsInField(const pcl::PointXYZ& point) {
-    const float yOffset = FIELDSIZE_Y / 2.0f;
-    if (yOffset < abs(point.y))
-      return false;
-    if (FIELDSIZE_X < abs(point.x))
-      return false;
-
-    return true;
-  }
-
-  float getClusterDistanceToOrigin(const Cluster& cluster) {
-    auto clusterLocation = getClusterLocation(cluster);
-    return sqrtf(powf(clusterLocation.x, 2.0) + powf(clusterLocation.y, 2.0));
-  }
-
-  float distanceBetweenMeassurementPoints(float sensorDistance) {
-    //a1 = distance * tan alpha1 -> a = 2*a1 = 2 * distance * tan alpha1
-    const float alpha1 = sensorAngleResolution / 2.0f;
-    //return 2*sensorDistance*tan(alpha1 *(M_PI/180.0f));
-    return sensorDistance * tan(sensorAngleResolution*(M_PI/180.0f));
-  }
-
-  int expectedBallPoints(float sensorDistance) {
-    return (int) (spheroDiameterAtOpticalAxis / distanceBetweenMeassurementPoints(sensorDistance));
-  }
-
-  const Cluster& getBallCluster(const std::vector<Cluster>& clusters) {
-    for(const auto& cluster: clusters) {
-      const auto distance = getClusterDistanceToOrigin(cluster);
-      const auto expectedPoints = expectedBallPoints(distance);
-      ROS_INFO_STREAM("distance: " << distance << " expected points: " << expectedPoints << " actual points: " << cluster.points.size());
-
-      if (expectedPoints - clusterPointTolerance  <= cluster.points.size() && cluster.points.size() <= expectedPoints + clusterPointTolerance ) {
-        return cluster;
-      }
-    }
-    throw std::invalid_argument("Ball not found");
-  }
-
-  const Cluster& getClusterWithMostPoints(const std::vector<Cluster>& clusters) {
-    int maxPoints = 0;
-    int targetIndex = 0;
-    for (int i = 0; i < clusters.size(); i++) {
-      if (clusters[i].points.size() > maxPoints) {
-        targetIndex = i;
-        maxPoints = clusters[i].points.size();
-      }
-    }
-    return clusters[targetIndex];
-  }
-
-  bool pointIsRightOfSensor(const pcl::PointXYZ point) {
-    return point.y < 0;
-  }
-
-  pcl::PointXYZ getTargetLocation(const Cluster& targetCluster) {
-    auto clusterLocation = getClusterLocation(targetCluster);
-    auto result = targetCluster.points[0];
-    //point is right to
-    if (pointIsRightOfSensor(clusterLocation)) {
-      for (int i = 0; i < targetCluster.points.size(); i++) {
-        if (targetCluster.points[i].y > result.y)
-          result = targetCluster.points[i];
-      }
-    } else {
-      for (int i = 0; i < targetCluster.points.size(); i++) {
-        if (targetCluster.points[i].y < result.y)
-          result = targetCluster.points[i];
-      }
-    }
-    return result;
-  }
-
-  
 
   void 
   callback (const sensor_msgs::PointCloud2ConstPtr& input)
@@ -228,6 +129,111 @@ class PositionDetection {
     }
   }
 
+
+  private:
+
+  bool pointIsInField(const pcl::PointXYZ& point) {
+    const float yOffset = FIELDSIZE_Y / 2.0f;
+    if (yOffset < abs(point.y))
+      return false;
+    if (FIELDSIZE_X < abs(point.x))
+      return false;
+
+    return true;
+  }
+
+
+  const Cluster& getBallCluster(const std::vector<Cluster>& clusters) {
+    for(const auto& cluster: clusters) {
+      const auto distance = getClusterDistanceToOrigin(cluster);
+      const auto expectedPoints = expectedBallPoints(distance);
+      ROS_INFO_STREAM("distance: " << distance << " expected points: " << expectedPoints << " actual points: " << cluster.points.size());
+
+      if (expectedPoints - clusterPointTolerance  <= cluster.points.size() && cluster.points.size() <= expectedPoints + clusterPointTolerance ) {
+        return cluster;
+      }
+    }
+    throw std::invalid_argument("Ball not found");
+  }
+
+
+  float getClusterDistanceToOrigin(const Cluster& cluster) {
+    auto clusterLocation = getClusterLocation(cluster);
+    return sqrtf(powf(clusterLocation.x, 2.0) + powf(clusterLocation.y, 2.0));
+  }
+
+
+  int expectedBallPoints(float sensorDistance) {
+    return (int) (spheroDiameterAtOpticalAxis / distanceBetweenMeassurementPoints(sensorDistance));
+  }
+
+
+  pcl::PointXYZ getBallClusterLocation(const Cluster& cluster) {
+    pcl::PointXYZ result = cluster.points[0];
+    for (int i = 1; i < cluster.points.size(); i++) {
+      if (cluster.points[i].x < result.x)
+        result = cluster.points[i];
+    }
+    return result;
+  }
+
+  const pcl::PointXYZ getClusterLocation(const Cluster& cluster) {
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    for (auto& point: cluster.points) {
+      x += point.x;
+      y += point.y;
+    }
+    x = x / cluster.points.size();
+    y = y / cluster.points.size();
+    z = z / cluster.points.size();
+    
+    return pcl::PointXYZ(x, y, z);
+  }
+
+
+  float distanceBetweenMeassurementPoints(float sensorDistance) {
+    //a1 = distance * tan alpha1 -> a = 2*a1 = 2 * distance * tan alpha1
+    const float alpha1 = sensorAngleResolution / 2.0f;
+    //return 2*sensorDistance*tan(alpha1 *(M_PI/180.0f));
+    return sensorDistance * tan(sensorAngleResolution*(M_PI/180.0f));
+  }
+
+
+  const Cluster& getClusterWithMostPoints(const std::vector<Cluster>& clusters) {
+    int maxPoints = 0;
+    int targetIndex = 0;
+    for (int i = 0; i < clusters.size(); i++) {
+      if (clusters[i].points.size() > maxPoints) {
+        targetIndex = i;
+        maxPoints = clusters[i].points.size();
+      }
+    }
+    return clusters[targetIndex];
+  }
+
+  pcl::PointXYZ getTargetLocation(const Cluster& targetCluster) {
+    auto clusterLocation = getClusterLocation(targetCluster);
+    auto result = targetCluster.points[0];
+    //point is right to
+    if (pointIsRightOfSensor(clusterLocation)) {
+      for (int i = 0; i < targetCluster.points.size(); i++) {
+        if (targetCluster.points[i].y > result.y)
+          result = targetCluster.points[i];
+      }
+    } else {
+      for (int i = 0; i < targetCluster.points.size(); i++) {
+        if (targetCluster.points[i].y < result.y)
+          result = targetCluster.points[i];
+      }
+    }
+    return result;
+  }
+  
+  bool pointIsRightOfSensor(const pcl::PointXYZ point) {
+    return point.y < 0;
+  }
 
   private:
   const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
