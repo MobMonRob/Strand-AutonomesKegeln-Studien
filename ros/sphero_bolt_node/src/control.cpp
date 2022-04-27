@@ -33,59 +33,6 @@ class TargetAngleControl {
         publisherSpeed = nh.advertise<std_msgs::Int16>("sphero_control/speed", 1);
     }
 
-    void updateSpeed(int16_t newSpeed) {
-        newSpeed = std::max((int16_t)0, std::min(newSpeed, (int16_t)255));
-        if (newSpeed == speed) 
-            return;
-
-        ROS_INFO_STREAM("publishing speed: " << newSpeed);
-        std_msgs::Int16 output;
-        output.data = newSpeed;
-        speed = newSpeed;
-        publisherSpeed.publish(output);
-    }
-
-	void updateHeading(int16_t newHeading) {
-		newHeading = std::min(newHeading, (int16_t)360);
-			
-        if (heading - 1 <= newHeading && newHeading <= heading + 1) 
-			return;
-
-        ROS_INFO_STREAM("publishing heading: " << newHeading);
-        std_msgs::Int16 output;
-        output.data = newHeading;
-        heading = newHeading;
-        publisherHeading.publish(output);
-	}
-
-    void callbackNoBallDetected(std_msgs::Bool input) {
-		ROS_INFO("No ball detected");
-        BufferedPosition positionToBeBuffered;
-        positionToBeBuffered.ballFound = false;
-        positionPredictor.add(positionToBeBuffered);
-        updateSpeed(speed - 15);
-    }
-
-    bool positionIsAboveTarget(pcl::PointXYZ position, pcl::PointXYZ target) {
-        return position.x >= target.x;
-    }
-
-    float getIdealAngle(pcl::PointXYZ position, pcl::PointXYZ target) {
-        const float radiantToDegreeFactor = 180/M_PI; //deg/Rad = 360/2pi -> deg = pi*Rad/180
-        float deltaX = fabs(position.x - target.x);
-        float deltaY = fabs(position.y - target.y);
-        float angle = radiantToDegreeFactor*atanf(deltaY/deltaX);
-
-        ROS_INFO_STREAM("deltax: " << deltaX << "deltay: " << deltaY << "angle: " << angle);
-        //0 degree means the sphero goes straight
-        //for a detailed epxlanation look into the documentation
-        if (positionIsAboveTarget(position, target)) {
-            return 90.0f - angle;
-        } else {
-            return 360.0f - (90.0f - angle);
-        }
-    }
-
     void callbackBallPosition(geometry_msgs::Point32 input) {
         pcl::PointXYZ ballPosition = pcl::PointXYZ(input.x, input.y, input.z);
 
@@ -112,7 +59,7 @@ class TargetAngleControl {
         positionPredictor.add(positionToBeBuffered);
     }
 
-    
+
     void callbackTargetPosition(geometry_msgs::Point32 input) {
         
         float distanceToOldTarget = sqrtf(powf(target.x - input.x, 2.0f) + powf(target.y - input.y, 2.0f));
@@ -123,6 +70,65 @@ class TargetAngleControl {
         }
     }
 
+
+    void callbackNoBallDetected(std_msgs::Bool input) {
+		ROS_INFO("No ball detected");
+        BufferedPosition positionToBeBuffered;
+        positionToBeBuffered.ballFound = false;
+        positionPredictor.add(positionToBeBuffered);
+        updateSpeed(speed - 15);
+    }
+
+    float getIdealAngle(pcl::PointXYZ position, pcl::PointXYZ target) {
+        const float radiantToDegreeFactor = 180/M_PI; //deg/Rad = 360/2pi -> deg = pi*Rad/180
+        float deltaX = fabs(position.x - target.x);
+        float deltaY = fabs(position.y - target.y);
+        float angle = radiantToDegreeFactor*atanf(deltaY/deltaX);
+
+        ROS_INFO_STREAM("deltax: " << deltaX << "deltay: " << deltaY << "angle: " << angle);
+        //0 degree means the sphero goes straight
+        //for a detailed epxlanation look into the documentation
+        if (positionIsAboveTarget(position, target)) {
+            return 90.0f - angle;
+        } else {
+            return 360.0f - (90.0f - angle);
+        }
+    }
+
+    bool positionIsAboveTarget(pcl::PointXYZ position, pcl::PointXYZ target) {
+        return position.x >= target.x;
+    }
+
+
+    void updateSpeed(int16_t newSpeed) {
+        newSpeed = std::max((int16_t)0, std::min(newSpeed, (int16_t)255));
+        if (newSpeed == speed) 
+            return;
+
+        ROS_INFO_STREAM("publishing speed: " << newSpeed);
+        std_msgs::Int16 output;
+        output.data = newSpeed;
+        speed = newSpeed;
+        publisherSpeed.publish(output);
+    }
+
+	void updateHeading(int16_t newHeading) {
+		newHeading = std::min(newHeading, (int16_t)360);
+			
+        if (heading - 1 <= newHeading && newHeading <= heading + 1) 
+			return;
+
+        ROS_INFO_STREAM("publishing heading: " << newHeading);
+        std_msgs::Int16 output;
+        output.data = newHeading;
+        heading = newHeading;
+        publisherHeading.publish(output);
+	}
+
+
+
+
+    
 
     private:
     int16_t speed = 0;
