@@ -57,12 +57,11 @@ class PositionDetection {
     lastBallDetection = ros::Time::now().toSec();
      
     ROS_INFO_STREAM("found ballcluster with size: " <<  ballCluster.points.size() << " x: " << ballLocation.x  << 
-    " y: " << ballLocation.y << " z: " << ballLocation.z);
+    " y: " << ballLocation.y);
 
     auto output = geometry_msgs::Point32();
     output.x = ballLocation.x;
     output.y = ballLocation.y;
-    output.z = ballLocation.z;
     publisherPosition.publish(output);
     } catch (const std::exception& err) {
 	  ROS_INFO("No ball detected");
@@ -82,7 +81,7 @@ class PositionDetection {
         auto targetOutput = geometry_msgs::Point32();
         targetOutput.x = targetLocation.x;
         targetOutput.y = targetLocation.y;
-        targetOutput.z = targetLocation.z;
+        targetOutput.z = 0;
         targetPositionPublisher.publish(targetOutput);
       }
     }
@@ -96,7 +95,7 @@ class PositionDetection {
     auto currentCluster = Cluster();
 
     for(auto& point: points->points) {
-      if (point.x == 0 && point.y == 0 && point.z == 0) {
+      if (point.x == 0 && point.y == 0 ) {
         continue;
       }
       if (!pointIsInField(point))
@@ -104,17 +103,17 @@ class PositionDetection {
 
       float distanceToLastPoint = 0;
       if (currentCluster.points.size() > 0)
-        distanceToLastPoint =  pcl::euclideanDistance(point, currentCluster.points.back());
+        distanceToLastPoint =  distanceBetweenTwoPoints(point, currentCluster.points.back());
 
       if (distanceToLastPoint > EPSILON_POINT_DISTANCE) {
         //filter out clusters which consist of less than four points
-        if (currentCluster.points.size() >= 4)
+        if (currentCluster.points.size() >= minimumClusterSize)
           clusters.push_back(currentCluster);
         currentCluster = Cluster();
       }
       currentCluster.points.push_back(pcl::PointXYZ(point));
     }
-    if (currentCluster.points.size() >= 4)
+    if (currentCluster.points.size() >= minimumClusterSize)
       clusters.push_back(currentCluster);
 
     return clusters;
@@ -143,11 +142,15 @@ class PositionDetection {
     }
     throw std::invalid_argument("Ball not found");
   }
+  
+  float distanceBetweenTwoPoints(const pcl::PointXYZ& point1, const pcl::PointXYZ& point2) {
+    return sqrtf(powf(point1.x - point2.x, 2.0) + powf(point1.y - point2.y, 2.0));
+  }
 
 
   float getClusterDistanceToOrigin(const Cluster& cluster) {
     auto clusterLocation = getClusterLocation(cluster);
-    return sqrtf(powf(clusterLocation.x, 2.0) + powf(clusterLocation.y, 2.0));
+    return distanceBetweenTwoPoints(origin, clusterLocation);
   }
 
 
@@ -175,17 +178,13 @@ class PositionDetection {
     }
     x = x / cluster.points.size();
     y = y / cluster.points.size();
-    z = z / cluster.points.size();
     
     return pcl::PointXYZ(x, y, z);
   }
 
 
   float distanceBetweenMeassurementPoints(float sensorDistance) {
-    //a1 = distance * tan alpha1 -> a = 2*a1 = 2 * distance * tan alpha1
-    const float alpha1 = sensorAngleResolution / 2.0f;
-    //return 2*sensorDistance*tan(alpha1 *(M_PI/180.0f));
-    return sensorDistance * tan(sensorAngleResolution*(M_PI/180.0f));
+    return sensorDistance * tan(sensorAngleResolution*radiantToDegreeFactor);
   }
 
 
@@ -224,25 +223,28 @@ class PositionDetection {
   }
 
   private:
-  const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
-  const float spheroRadius = 0.0365f; //36.5mm
-  const float sensorAngleResolution = 0.16f;
-  const float heightOpticalAxis = 0.063; //63mm
-  const float spheroDiameterAtOpticalAxis = 2*sqrtf(powf(spheroRadius, 2.0)-powf(spheroRadius - heightOpticalAxis, 2.0)); //2*sqrt(r^2-(r-h)^2)
-  const int clusterPointTolerance = 10;
+  //adjustable variables
+    const int clusterPointTolerance = 10;
+    const int minimumClusterSize = 5;
+    const float FIELDSIZE_X = 1.3f;
+    const float FIELDSIZE_Y = 3.0f;
+    const float EPSILON_POINT_DISTANCE = 0.035f;
 
-  const float FIELDSIZE_X = 1.35f;
-  const float FIELDSIZE_Y = 3.0f;
-  const float EPSILON_POINT_DISTANCE = 0.035f;
+    //non adjustable variables
+    const pcl::PointXYZ origin = pcl::PointXYZ(0.0f, 0.0f, 0.0f);
+    const float spheroRadius = 0.0365f; //36.5mm
+    const float sensorAngleResolution = 0.16f;
+    const float heightOpticalAxis = 0.063f; //63mm
+    const float spheroDiameterAtOpticalAxis = 2*sqrtf(powf(spheroRadius, 2.0)-powf(spheroRadius - heightOpticalAxis, 2.0)); //2*sqrt(r^2-(r-h)^2)
+    const float radiantToDegreeFactor = M_PI/180.0f;
+    bool ballDetected = false;
+    double lastBallDetection;
 
-  bool ballDetected = false;
-
-  ros::NodeHandle nh;
-  ros::Subscriber sub;
-  ros::Publisher publisherPosition;
-  ros::Publisher noPositionPublisher;
-  ros::Publisher targetPositionPublisher;
-  double lastBallDetection;
+    ros::NodeHandle nh;
+    ros::Subscriber sub;
+    ros::Publisher publisherPosition;
+    ros::Publisher noPositionPublisher;
+    ros::Publisher targetPositionPublisher;
 };
 
 
