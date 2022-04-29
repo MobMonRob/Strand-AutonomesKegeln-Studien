@@ -127,7 +127,7 @@ class TargetAngleControl {
     float updateSpheroTime = 0.1f;
     
     //non adjustable variables
-    const float radiantToDegreeFactor = 180/M_PI;
+    const float radiantToDegreeFactor = 180.0f/M_PI;
     int16_t speed = 0;
     int16_t heading = 0;
     double lastBallDetection = 0;
