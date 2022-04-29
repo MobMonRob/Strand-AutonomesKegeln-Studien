@@ -76,7 +76,7 @@ class PositionDetection {
         auto targetLocation = getTargetLocation(targetCluster);
 
         ROS_INFO_STREAM("Found target cluster with size: " << targetCluster.points.size() << " x: " << targetLocation.x << 
-        " y: " << targetLocation.y << " z: " << targetLocation.z);
+        " y: " << targetLocation.y);
 
         auto targetOutput = geometry_msgs::Point32();
         targetOutput.x = targetLocation.x;
