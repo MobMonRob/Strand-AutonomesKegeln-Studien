@@ -24,14 +24,14 @@ read -n 1
 rosrun sphero_bolt_node move_sphero.py > move_sphero_log &
 ROS_SPHERO_PID=$!
 
-echo "Press any key if Sphero glows green to continue..."
+echo "Take Sphero if he glows green, then press any key to continue..."
 read -n 1
 
 # Start control
 rosrun sphero_bolt_node control > control_log &
 ROS_CONTROL_PID=$!
 
-
+echo "Ready to play!"
 echo "Press any key to exit..."
 read -n 1
 
