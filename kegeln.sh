@@ -16,7 +16,7 @@ rosrun sphero_bolt_node object_tracking > object_tracking_log &
 ROS_OBJECT_TRACKING_PID=$!
 
 # fordern das sphero richtig vor die kegel gelegt wird
-echo "Sphero bolt, FRONT TOWARD ENEMY"
+echo "Please place the Sphero with the little coordinate system, printed on his PCB, towards the cones"
 echo "Press any key to continue..."
 read -n 1
 
